@@ -1,1 +1,1 @@
-# AI-Image-Editor-Final-Project
+# AI-Image-Editor

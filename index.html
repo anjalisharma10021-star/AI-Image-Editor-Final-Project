@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI Natural Language Image Editor Showcase">
+    <title>AI Image Editor with Natural Language</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Outfit:wght@400;700&display=swap"
+        rel="stylesheet">
+    <!-- Cropper.js CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="background-elements">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <header>
+        <div class="logo">
+            <span class="logo-icon">✨</span>
+            <h1 style="font-size: 1.2rem;">AI Image Editor</h1>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="#" class="active">Editor</a></li>
+                <li><a href="#">Gallery</a></li>
+                <li><a href="#">Documentation</a></li>
+            </ul>
+        </nav>
+        <div id="authContainer">
+            <button class="btn-primary" id="signInBtn">Sign In</button>
+            <div class="user-profile hidden" id="userProfile">
+                <span class="avatar">👤</span>
+                <span id="userNameDisplay">User</span>
+                <button class="btn-secondary" id="signOutBtn"
+                    style="padding: 0.4rem 0.8rem; font-size: 0.8rem; margin-left: 10px;">Sign Out</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="editor-panel">
+            <div class="panel-header">
+                <h2>Create Magic</h2>
+                <p>Upload an image and describe how you want to transform it using natural language.</p>
+            </div>
+
+            <div class="upload-area" id="uploadArea">
+                <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                <div class="upload-content" id="uploadContent">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <p>Drag & drop an image here or <span>browse</span></p>
+                </div>
+            </div>
+
+            <!-- Image Editing Toolbar (Hidden initially) -->
+            <div class="editing-toolbar hidden" id="editingToolbar">
+                <button class="btn-tool" id="cropToolBtn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M6.13 1L6 16a2 2 0 0 0 2 2h15"></path>
+                        <path d="M1 6.13L16 6a2 2 0 0 1 2 2v15"></path>
+                    </svg>
+                    Crop
+                </button>
+                <button class="btn-tool" id="eraserToolBtn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path
+                            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                        </path>
+                    </svg>
+                    Magic Eraser
+                </button>
+                <button class="btn-tool" id="filterToolBtn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2v20"></path>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                    </svg>
+                    Filters
+                </button>
+                <button class="btn-tool hidden" id="applyEditBtn"
+                    style="background: var(--primary); color: white;">Apply</button>
+                <button class="btn-tool hidden" id="cancelEditBtn">Cancel</button>
+            </div>
+
+            <!-- Edit Container for Cropping/Erasing -->
+            <div class="edit-container hidden" id="editContainer">
+                <img id="editImage" src="" alt="Edit">
+                <canvas id="eraserCanvas" class="hidden"></canvas>
+            </div>
+
+            <!-- B612 Filter Options -->
+            <div class="filter-options hidden" id="filterOptions">
+                <button class="filter-btn" data-filter="none">Normal</button>
+                <button class="filter-btn" data-filter="sepia(0.8) contrast(1.1)">Vintage</button>
+                <button class="filter-btn" data-filter="grayscale(1) contrast(1.2)">B&W</button>
+                <button class="filter-btn" data-filter="sepia(0.4) saturate(1.5) hue-rotate(-10deg)">Warm</button>
+                <button class="filter-btn" data-filter="saturate(1.2) hue-rotate(180deg)">Cool</button>
+                <button class="filter-btn" data-filter="contrast(1.2) saturate(1.5)">Vivid</button>
+                <button class="filter-btn" data-filter="brightness(1.2) contrast(1.1)">Bright</button>
+            </div>
+
+            <div class="prompt-area">
+                <label for="promptInput">Transformation Prompt</label>
+                <div class="input-wrapper">
+                    <textarea id="promptInput"
+                        placeholder="e.g. Transform this room into a futuristic cyberpunk style with neon lights..."
+                        rows="3"></textarea>
+                </div>
+            </div>
+
+            <div class="controls">
+                <div class="control-group">
+                    <label>Style Strength</label>
+                    <input type="range" min="1" max="100" value="75" class="slider" id="strengthSlider">
+                </div>
+            </div>
+
+            <button class="btn-generate" id="generateBtn">
+                <span>Generate Image</span>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 12h14"></path>
+                    <path d="m12 5 7 7-7 7"></path>
+                </svg>
+            </button>
+        </section>
+
+        <section class="preview-panel">
+            <div class="preview-container" id="previewContainer">
+                <div class="empty-state" id="emptyState">
+                    <div class="hologram-circle"></div>
+                    <p>Your creation will appear here</p>
+                </div>
+
+                <div class="result-view hidden" id="resultView">
+                    <div class="comparison-slider">
+                        <img src="assets/original.png" alt="Edited Image" class="after-image" id="afterImage">
+                        <div class="before-image-wrapper">
+                            <img src="assets/original.png" alt="Original Image" class="before-image" id="beforeImage">
+                        </div>
+                        <div class="slider-handle">
+                            <div class="slider-line"></div>
+                            <div class="slider-button">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="15 18 9 12 15 6"></polyline>
+                                </svg>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="result-actions">
+                        <button class="btn-secondary" id="downloadBtn">Download</button>
+                        <button class="btn-secondary" id="shareBtn">Share</button>
+                    </div>
+                </div>
+
+                <div class="loading-state hidden" id="loadingState">
+                    <div class="loader">
+                        <div class="circle"></div>
+                        <div class="circle"></div>
+                        <div class="circle"></div>
+                        <div class="circle"></div>
+                    </div>
+                    <p class="loading-text">Applying Neural Filters...</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Sign In Modal -->
+    <div class="modal-overlay hidden" id="signInModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Sign In</h2>
+                <button class="close-btn" id="closeModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label for="emailInput">Email</label>
+                    <input type="email" id="emailInput" placeholder="Enter your email" />
+                </div>
+                <div class="input-group">
+                    <label for="passwordInput">Password</label>
+                    <input type="password" id="passwordInput" placeholder="Enter your password" />
+                </div>
+                <button class="btn-primary" id="loginSubmitBtn" style="width: 100%; margin-top: 1rem;">Log In</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cropper.js and App Script -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
